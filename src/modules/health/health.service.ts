@@ -1,5 +1,7 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { Sequelize } from 'sequelize-typescript';
+import { AppException } from '../../shared/errors/app-exception';
+import { ErrorCode } from '../../shared/errors/error-codes';
 
 export interface HealthStatus {
   status: 'ok';
@@ -19,14 +21,11 @@ export class HealthService {
     try {
       await this.sequelize.authenticate();
     } catch {
-      throw new ServiceUnavailableException({
-        error: {
-          code: 'DATABASE_UNAVAILABLE',
-          message: 'La base de datos no está disponible',
-          details: [],
-          traceId: 'health',
-        },
-      });
+      throw new AppException(
+        HttpStatus.SERVICE_UNAVAILABLE,
+        ErrorCode.DATABASE_UNAVAILABLE,
+        'La base de datos no está disponible',
+      );
     }
 
     return {

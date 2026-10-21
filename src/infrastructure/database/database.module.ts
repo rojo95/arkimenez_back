@@ -6,9 +6,9 @@ import type { SequelizeModuleOptions } from '@nestjs/sequelize';
 /**
  * Conexión a PostgreSQL mediante Sequelize (ADR-0001).
  *
- * Usa el mismo patrón de variables DB_* que SmartBucks. En la Fase 1 no hay
- * modelos de negocio: la lista `models` queda vacía y el esquema se gestionará
- * solo con migraciones versionadas (Fase 2). `sync()` está prohibido.
+ * Usa el mismo patrón de variables DB_* que SmartBucks. Los modelos se
+ * registran por módulo con `SequelizeModule.forFeature` y el esquema se
+ * gestiona solo con migraciones versionadas. `sync()` está prohibido.
  */
 @Global()
 @Module({
@@ -25,7 +25,12 @@ import type { SequelizeModuleOptions } from '@nestjs/sequelize';
         password: config.get<string>('DB_PASSWORD') ?? '',
         autoLoadModels: true,
         models: [],
+        synchronize: false,
         logging: false,
+        define: {
+          underscored: true,
+          timestamps: true,
+        },
         dialectOptions: config.get<boolean>('DB_SSL')
           ? { ssl: { require: true, rejectUnauthorized: false } }
           : {},

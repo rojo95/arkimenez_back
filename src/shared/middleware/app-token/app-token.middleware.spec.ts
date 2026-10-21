@@ -26,6 +26,7 @@ describe('AppTokenMiddleware', () => {
     const next = jest.fn() as NextFunction;
     const req = {
       method: 'GET',
+      originalUrl: '/api/v1/health',
       headers: { 'x-app-token': TOKEN },
     } as unknown as Request;
 
@@ -38,7 +39,11 @@ describe('AppTokenMiddleware', () => {
     const middleware = createMiddleware();
     const next = jest.fn() as NextFunction;
     const res = createResponse();
-    const req = { method: 'GET', headers: {} } as unknown as Request;
+    const req = {
+      method: 'GET',
+      originalUrl: '/api/v1/health',
+      headers: {},
+    } as unknown as Request;
 
     middleware.use(req, res, next);
 
@@ -51,12 +56,27 @@ describe('AppTokenMiddleware', () => {
     );
   });
 
+  it('deja pasar la documentación OpenAPI sin clave', () => {
+    const middleware = createMiddleware();
+    const next = jest.fn() as NextFunction;
+    const req = {
+      method: 'GET',
+      originalUrl: '/api/v1/docs',
+      headers: {},
+    } as unknown as Request;
+
+    middleware.use(req, createResponse(), next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
   it('rechaza con 401 si la clave es incorrecta', () => {
     const middleware = createMiddleware();
     const next = jest.fn() as NextFunction;
     const res = createResponse();
     const req = {
       method: 'GET',
+      originalUrl: '/api/v1/health',
       headers: { 'x-app-token': 'clave-incorrecta' },
     } as unknown as Request;
 
@@ -69,7 +89,11 @@ describe('AppTokenMiddleware', () => {
   it('deja pasar los preflight OPTIONS sin clave', () => {
     const middleware = createMiddleware();
     const next = jest.fn() as NextFunction;
-    const req = { method: 'OPTIONS', headers: {} } as unknown as Request;
+    const req = {
+      method: 'OPTIONS',
+      originalUrl: '/api/v1/health',
+      headers: {},
+    } as unknown as Request;
 
     middleware.use(req, createResponse(), next);
 

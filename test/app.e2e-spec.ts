@@ -6,8 +6,8 @@ import { AppModule } from './../src/app.module';
 /**
  * Prueba e2e del endpoint de salud.
  *
- * Requiere un `.env` válido y PostgreSQL en marcha (docker compose up -d postgres):
- * la prueba comprueba la conexión real a la base de datos.
+ * Requiere un `.env` válido y PostgreSQL local en marcha: la prueba comprueba
+ * la conexión real a la base de datos.
  */
 describe('Health (e2e)', () => {
   let app: INestApplication;

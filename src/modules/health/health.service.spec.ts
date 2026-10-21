@@ -1,5 +1,5 @@
-import { ServiceUnavailableException } from '@nestjs/common';
 import { Sequelize } from 'sequelize-typescript';
+import { AppException } from '../../shared/errors/app-exception';
 import { HealthService } from './health.service';
 
 describe('HealthService', () => {
@@ -26,8 +26,9 @@ describe('HealthService', () => {
   it('responde 503 con el formato de error único si la base de datos falla', async () => {
     authenticate.mockRejectedValue(new Error('connection refused'));
 
-    await expect(service.check()).rejects.toBeInstanceOf(
-      ServiceUnavailableException,
-    );
+    await expect(service.check()).rejects.toMatchObject({
+      code: 'DATABASE_UNAVAILABLE',
+    });
+    await expect(service.check()).rejects.toBeInstanceOf(AppException);
   });
 });

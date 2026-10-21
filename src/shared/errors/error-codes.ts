@@ -1,0 +1,32 @@
+/**
+ * Códigos de error estables de la API (catálogo en `plan/api/error-codes.md`).
+ *
+ * El `code` está en inglés y en `SCREAMING_SNAKE_CASE`; el cliente traduce el
+ * texto a partir de él. No se expone información interna en ningún caso.
+ */
+export const ErrorCode = {
+  APP_TOKEN_REQUIRED: 'APP_TOKEN_REQUIRED',
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  UNAUTHENTICATED: 'UNAUTHENTICATED',
+  FORBIDDEN: 'FORBIDDEN',
+  ACCOUNT_DISABLED: 'ACCOUNT_DISABLED',
+  CSRF_TOKEN_INVALID: 'CSRF_TOKEN_INVALID',
+  NOT_FOUND: 'NOT_FOUND',
+  CONFLICT: 'CONFLICT',
+  DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',
+  RATE_LIMITED: 'RATE_LIMITED',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+} as const;
+
+export type ErrorCodeValue = (typeof ErrorCode)[keyof typeof ErrorCode];
+
+/** Traducción de los códigos HTTP estándar a un `code` del catálogo. */
+export const HTTP_STATUS_TO_ERROR_CODE: Record<number, ErrorCodeValue> = {
+  400: ErrorCode.VALIDATION_ERROR,
+  401: ErrorCode.UNAUTHENTICATED,
+  403: ErrorCode.FORBIDDEN,
+  404: ErrorCode.NOT_FOUND,
+  409: ErrorCode.CONFLICT,
+  429: ErrorCode.RATE_LIMITED,
+  503: ErrorCode.DATABASE_UNAVAILABLE,
+};
