@@ -15,8 +15,6 @@ export interface StoreSettingAttributes {
   tableName: 'store_settings',
   underscored: true,
   timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at',
 })
 export class StoreSetting extends Model<
   StoreSettingAttributes,

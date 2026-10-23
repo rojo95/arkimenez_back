@@ -21,8 +21,6 @@ export type PermissionCreationAttributes = Optional<PermissionAttributes, 'id'>;
   tableName: 'permissions',
   underscored: true,
   timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at',
 })
 export class Permission extends Model<
   PermissionAttributes,

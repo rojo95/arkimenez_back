@@ -27,7 +27,6 @@ export type AuditLogCreationAttributes = Optional<
   tableName: 'audit_logs',
   underscored: true,
   timestamps: true,
-  createdAt: 'created_at',
   updatedAt: false,
 })
 export class AuditLog extends Model<

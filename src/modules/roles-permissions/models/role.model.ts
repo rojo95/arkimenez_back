@@ -21,8 +21,6 @@ export type RoleCreationAttributes = Optional<RoleAttributes, 'id'>;
   tableName: 'roles',
   underscored: true,
   timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at',
 })
 export class Role extends Model<RoleAttributes, RoleCreationAttributes> {
   @PrimaryKey

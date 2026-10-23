@@ -7,6 +7,7 @@ import { secureEquals } from '../../utils/secure-compare';
 
 const APP_TOKEN_HEADER = 'x-app-token';
 const DOCS_PATH_PREFIX = '/api/v1/docs';
+const MEDIA_PATH_PREFIX = '/media/';
 
 /**
  * Exige la cabecera `x-app-token` con el valor de APP_ACCESS_TOKEN.
@@ -15,8 +16,9 @@ const DOCS_PATH_PREFIX = '/api/v1/docs';
  * filtra clientes que no son el frontend autorizado. No sustituye a la
  * autenticación de usuarios (JWT/cookies).
  *
- * La documentación OpenAPI (`/api/v1/docs`) queda fuera porque su UI no envía
- * cabeceras personalizadas.
+ * Quedan fuera la documentación OpenAPI (`/api/v1/docs`), porque su UI no
+ * envía cabeceras personalizadas, y los archivos servidos en `/media/`
+ * (imágenes locales de desarrollo, ADR-0004).
  */
 @Injectable()
 export class AppTokenMiddleware implements NestMiddleware {
@@ -29,7 +31,11 @@ export class AppTokenMiddleware implements NestMiddleware {
       return;
     }
 
-    if (req.originalUrl.startsWith(DOCS_PATH_PREFIX)) {
+    // Las imágenes locales se sirven como assets estáticos (ADR-0004).
+    if (
+      req.originalUrl.startsWith(DOCS_PATH_PREFIX) ||
+      req.originalUrl.startsWith(MEDIA_PATH_PREFIX)
+    ) {
       next();
       return;
     }

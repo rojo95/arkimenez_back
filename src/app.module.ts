@@ -8,9 +8,12 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
 import { envValidationSchema } from './config/env.validation';
 import { DatabaseModule } from './infrastructure/database/database.module';
+import { StorageModule } from './infrastructure/storage/storage.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { CatalogModule } from './modules/catalog/catalog.module';
 import { HealthModule } from './modules/health/health.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
 import { RolesPermissionsModule } from './modules/roles-permissions/roles-permissions.module';
 import { StoreSettingsModule } from './modules/store-settings/store-settings.module';
 import { UsersModule } from './modules/users/users.module';
@@ -26,11 +29,14 @@ import { TraceIdMiddleware } from './shared/middleware/trace-id/trace-id.middlew
       validationOptions: { abortEarly: false, allowUnknown: true },
     }),
     DatabaseModule,
+    StorageModule,
     UsersModule,
     RolesPermissionsModule,
     StoreSettingsModule,
     AuditModule,
     AuthModule,
+    InventoryModule,
+    CatalogModule,
     HealthModule,
   ],
   providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],

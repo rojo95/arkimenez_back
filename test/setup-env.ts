@@ -16,3 +16,8 @@ process.env.INITIAL_OWNER_EMAIL =
   process.env.INITIAL_OWNER_EMAIL || 'owner.seed.test@tiendalujosa.test';
 process.env.INITIAL_OWNER_PASSWORD =
   process.env.INITIAL_OWNER_PASSWORD || 'OwnerSeedTest123';
+
+// Las imágenes de integración no deben mezclarse con las subidas de desarrollo.
+process.env.STORAGE_DRIVER = 'local';
+process.env.STORAGE_LOCAL_DIR = './.uploads/integration';
+process.env.MAX_IMAGE_SIZE_MB = '5';

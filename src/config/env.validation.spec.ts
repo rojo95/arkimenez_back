@@ -99,6 +99,31 @@ describe('envValidationSchema', () => {
     expect(error?.message).toContain('COOKIE_SECURE');
   });
 
+  it('prohíbe el driver local de imágenes en producción', () => {
+    const { error } = envValidationSchema.validate(
+      {
+        ...validEnv,
+        NODE_ENV: 'production',
+        COOKIE_SECURE: true,
+        STORAGE_DRIVER: 'local',
+      },
+      { abortEarly: false, allowUnknown: true },
+    );
+
+    expect(error).toBeDefined();
+    expect(error?.message).toContain('STORAGE_DRIVER');
+  });
+
+  it('exige la configuración S3 cuando el driver es s3', () => {
+    const { error } = envValidationSchema.validate(
+      { ...validEnv, STORAGE_DRIVER: 's3' },
+      { abortEarly: false, allowUnknown: true },
+    );
+
+    expect(error).toBeDefined();
+    expect(error?.message).toContain('S3_BUCKET');
+  });
+
   it('rechaza un NODE_ENV desconocido', () => {
     const { error } = envValidationSchema.validate(
       { ...validEnv, NODE_ENV: 'staging' },

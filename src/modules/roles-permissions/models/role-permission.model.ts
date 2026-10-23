@@ -15,7 +15,6 @@ export interface RolePermissionAttributes {
   tableName: 'role_permissions',
   underscored: true,
   timestamps: true,
-  createdAt: 'created_at',
   updatedAt: false,
 })
 export class RolePermission extends Model<

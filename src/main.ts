@@ -1,18 +1,30 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import { resolve } from 'node:path';
 import { AppModule } from './app.module';
 
 const API_PREFIX = 'api/v1';
 const DOCS_PATH = `${API_PREFIX}/docs`;
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get(ConfigService);
 
   app.use(cookieParser());
   app.setGlobalPrefix(API_PREFIX);
+
+  if (config.get<string>('STORAGE_DRIVER') === 'local') {
+    app.useStaticAssets(
+      resolve(
+        process.cwd(),
+        config.get<string>('STORAGE_LOCAL_DIR') ?? './.uploads',
+      ),
+      { prefix: '/media/' },
+    );
+  }
   app.enableCors({
     origin: config
       .getOrThrow<string>('CORS_ORIGINS')

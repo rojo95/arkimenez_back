@@ -52,6 +52,35 @@ export const envValidationSchema = Joi.object({
   ACTIVE_LOCALES: Joi.string().default('es,en'),
   STORE_CURRENCY: Joi.string().length(3).default('EUR'),
 
+  // Imágenes (ADR-0004). `local` no está permitido en producción.
+  STORAGE_DRIVER: Joi.string().when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().valid('s3').required(),
+    otherwise: Joi.string().valid('local', 's3').default('local'),
+  }),
+  STORAGE_LOCAL_DIR: Joi.string().default('./.uploads'),
+  MAX_IMAGE_SIZE_MB: Joi.number().integer().min(1).max(20).default(5),
+  S3_ENDPOINT: Joi.string()
+    .uri()
+    .allow('')
+    .when('STORAGE_DRIVER', { is: 's3', then: Joi.string().uri().required() }),
+  S3_REGION: Joi.string()
+    .allow('')
+    .when('STORAGE_DRIVER', { is: 's3', then: Joi.string().required() }),
+  S3_BUCKET: Joi.string()
+    .allow('')
+    .when('STORAGE_DRIVER', { is: 's3', then: Joi.string().required() }),
+  S3_ACCESS_KEY_ID: Joi.string()
+    .allow('')
+    .when('STORAGE_DRIVER', { is: 's3', then: Joi.string().required() }),
+  S3_SECRET_ACCESS_KEY: Joi.string()
+    .allow('')
+    .when('STORAGE_DRIVER', { is: 's3', then: Joi.string().required() }),
+  S3_PUBLIC_BASE_URL: Joi.string().uri().allow('').when('STORAGE_DRIVER', {
+    is: 's3',
+    then: Joi.string().uri().required(),
+  }),
+
   // Primer OWNER (solo lo exige el seeder, no el arranque)
   INITIAL_OWNER_EMAIL: Joi.string().email().allow('').optional(),
   INITIAL_OWNER_PASSWORD: Joi.string().min(10).max(128).allow('').optional(),

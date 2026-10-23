@@ -15,7 +15,6 @@ export interface UserRoleAttributes {
   tableName: 'user_roles',
   underscored: true,
   timestamps: true,
-  createdAt: 'created_at',
   updatedAt: false,
 })
 export class UserRole extends Model<UserRoleAttributes, UserRoleAttributes> {

@@ -27,8 +27,6 @@ export type RefreshTokenCreationAttributes = Optional<
   tableName: 'refresh_tokens',
   underscored: true,
   timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at',
 })
 export class RefreshToken extends Model<
   RefreshTokenAttributes,

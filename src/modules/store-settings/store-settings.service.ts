@@ -21,6 +21,11 @@ export class StoreSettingsService {
     return row?.value;
   }
 
+  async getAll(): Promise<Record<string, string>> {
+    const rows = await this.storeSettingModel.findAll();
+    return Object.fromEntries(rows.map((row) => [row.key, row.value]));
+  }
+
   async getMany(keys: string[]): Promise<Record<string, string>> {
     if (keys.length === 0) {
       return {};

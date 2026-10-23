@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import type { Transaction } from 'sequelize';
 import { AuditLog } from './models/audit-log.model';
 
 export interface AuditEntry {
@@ -20,13 +21,16 @@ export class AuditService {
     @InjectModel(AuditLog) private readonly auditLogModel: typeof AuditLog,
   ) {}
 
-  async record(entry: AuditEntry): Promise<void> {
-    await this.auditLogModel.create({
-      actorId: entry.actorId ?? null,
-      action: entry.action,
-      entity: entry.entity,
-      entityId: entry.entityId ?? null,
-      metadata: entry.metadata ? JSON.stringify(entry.metadata) : null,
-    });
+  async record(entry: AuditEntry, transaction?: Transaction): Promise<void> {
+    await this.auditLogModel.create(
+      {
+        actorId: entry.actorId ?? null,
+        action: entry.action,
+        entity: entry.entity,
+        entityId: entry.entityId ?? null,
+        metadata: entry.metadata ? JSON.stringify(entry.metadata) : null,
+      },
+      { transaction },
+    );
   }
 }

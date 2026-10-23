@@ -4,7 +4,7 @@
   "testEnvironment": "node",
   "testRegex": "test/integration/.*\\.integration-spec\\.ts$",
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
+    "^.+\\.ts$": "ts-jest"
   },
   "globalSetup": "<rootDir>/test/global-setup.js",
   "setupFiles": ["<rootDir>/test/setup-env.ts"],

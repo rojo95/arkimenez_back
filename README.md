@@ -86,11 +86,14 @@ scripts/export-openapi.ts      # exporta el contrato OpenAPI
 src/
 ├── config/                    # validación de variables de entorno (Joi)
 ├── infrastructure/
-│   └── database/              # conexión Sequelize (synchronize: false)
+│   ├── database/              # conexión Sequelize (synchronize: false)
+│   └── storage/               # StorageProvider local/S3 (ADR-0004)
 ├── modules/                   # un directorio por dominio
 │   ├── audit/                 # registro de auditoría
 │   ├── auth/                  # JWT, guards (CSRF, sesión, permisos) y decoradores
+│   ├── catalog/               # productos, variantes, categorías, atributos e imágenes
 │   ├── health/                # GET /api/v1/health
+│   ├── inventory/             # stock, movimientos y ajustes auditados
 │   ├── roles-permissions/     # matriz RBAC y resolución de permisos
 │   ├── seed/                  # seeder idempotente
 │   ├── store-settings/        # configuración clave-valor de la tienda
@@ -114,6 +117,9 @@ alguna). Nunca subir `.env` al repositorio.
 - **Sesiones**: `JWT_ACCESS_SECRET` (obligatoria, mínimo 32), `ACCESS_TOKEN_TTL`,
   `REFRESH_TOKEN_TTL_DAYS`, `COOKIE_DOMAIN`, `COOKIE_SECURE` (obligatoria `true` en producción).
 - **Tienda**: `STORE_NAME`, `DEFAULT_LOCALE`, `ACTIVE_LOCALES`, `STORE_CURRENCY`.
+- **Imágenes** (ADR-0004): `STORAGE_DRIVER` (`local`|`s3`), `STORAGE_LOCAL_DIR`,
+  `MAX_IMAGE_SIZE_MB` y las `S3_*` (obligatorias solo con `STORAGE_DRIVER=s3`). `local` no está
+  permitido con `NODE_ENV=production`.
 - **Primer OWNER** (solo lo necesita el seeder): `INITIAL_OWNER_EMAIL`, `INITIAL_OWNER_PASSWORD`.
 
 ## Seguridad de acceso entre frontend y backend
@@ -130,6 +136,20 @@ El login/logout llega en la Fase 5.
 > Como la clave no puede exponerse en el navegador, el frontend debe llamar al backend desde el
 > **servidor** de Next.js (Server Components, Route Handlers o Server Actions) con
 > `src/shared/api/backend.ts`.
+
+## Catálogo, imágenes e inventario (Fase 3)
+
+- Endpoints públicos (sin sesión, pero sí con `x-app-token`): `GET /products`,
+  `GET /products/:slugOrId`, `GET /categories` y `GET /attributes`. Solo devuelven productos
+  `PUBLISHED`; aceptan `locale` o `Accept-Language` con fallback al idioma por defecto.
+- Endpoints de administración (`/admin/*`) protegidos por `product:read_admin`, `product:write`,
+  `product:publish`, `category:write`, `inventory:read` e `inventory:adjust`.
+- Las imágenes se validan por contenido real con `sharp`, se re-codifican a WebP y se generan
+  `thumb`/`medium`/`large` con nombres generados por el servidor. Con el driver local se sirven en
+  `/media/...` (exento de `x-app-token`); en producción se usa S3.
+- El stock se ajusta con `PATCH /admin/inventory/:variantId`, exige un motivo, bloquea la fila con
+  `FOR UPDATE`, registra `stock_movements` y deja auditoría. Nunca puede quedar negativo.
+- Los archivos locales se guardan en `STORAGE_LOCAL_DIR` (por defecto `.uploads/`, ignorado por git).
 
 ## Migraciones y seeder
 
