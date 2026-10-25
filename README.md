@@ -90,14 +90,14 @@ src/
 │   └── storage/               # StorageProvider local/S3 (ADR-0004)
 ├── modules/                   # un directorio por dominio
 │   ├── audit/                 # registro de auditoría
-│   ├── auth/                  # JWT, guards (CSRF, sesión, permisos) y decoradores
+│   ├── auth/                  # registro, login, refresh, reset, cookies y guards
 │   ├── catalog/               # productos, variantes, categorías, atributos e imágenes
 │   ├── health/                # GET /api/v1/health
 │   ├── inventory/             # stock, movimientos y ajustes auditados
 │   ├── roles-permissions/     # matriz RBAC y resolución de permisos
 │   ├── seed/                  # seeder idempotente
 │   ├── store-settings/        # configuración clave-valor de la tienda
-│   └── users/                 # usuarios y hash argon2id
+│   └── users/                 # usuarios, perfil, direcciones y hash argon2id
 ├── shared/                    # filtro global, pipes Joi, traceId, errores
 ├── app.module.ts
 └── main.ts
@@ -115,7 +115,10 @@ alguna). Nunca subir `.env` al repositorio.
 - **`APP_ACCESS_TOKEN`**: clave compartida con el frontend. Se exige en la cabecera `x-app-token`
   en **todas** las rutas mediante `AppTokenMiddleware`. Debe coincidir con la del `frontend/.env`.
 - **Sesiones**: `JWT_ACCESS_SECRET` (obligatoria, mínimo 32), `ACCESS_TOKEN_TTL`,
-  `REFRESH_TOKEN_TTL_DAYS`, `COOKIE_DOMAIN`, `COOKIE_SECURE` (obligatoria `true` en producción).
+  `REFRESH_TOKEN_TTL_DAYS`, `PASSWORD_RESET_TTL_MINUTES`, `FRONTEND_URL` (para el enlace de
+  recuperación), `COOKIE_DOMAIN`, `COOKIE_SECURE` (obligatoria `true` en producción).
+- **Correo**: `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD`, `MAIL_FROM`. En desarrollo se
+  espera Mailpit en `localhost:1025`; en pruebas se usa `jsonTransport`.
 - **Tienda**: `STORE_NAME`, `DEFAULT_LOCALE`, `ACTIVE_LOCALES`, `STORE_CURRENCY`.
 - **Imágenes** (ADR-0004): `STORAGE_DRIVER` (`local`|`s3`), `STORAGE_LOCAL_DIR`,
   `MAX_IMAGE_SIZE_MB` y las `S3_*` (obligatorias solo con `STORAGE_DRIVER=s3`). `local` no está
@@ -129,13 +132,28 @@ alguna). Nunca subir `.env` al repositorio.
 único si no coincide. No identifica usuarios: es un filtro de clientes autorizados, equivalente
 al `ensureAccessFromApp` de SmartBucks.
 
-Las guardas globales de la Fase 2 aplican, en este orden: CSRF por doble envío, sesión JWT
-(`access_token` en cookie httpOnly o `Authorization: Bearer`) y permisos (`@RequirePermissions`).
-El login/logout llega en la Fase 5.
+Las guardas globales aplican, en este orden: CSRF por doble envío, sesión JWT (`tl_access` en cookie
+httpOnly o `Authorization: Bearer`) y permisos (`@RequirePermissions`). El rate limiting global usa
+IP y, cuando existe, el correo normalizado del cuerpo.
 
 > Como la clave no puede exponerse en el navegador, el frontend debe llamar al backend desde el
 > **servidor** de Next.js (Server Components, Route Handlers o Server Actions) con
-> `src/shared/api/backend.ts`.
+> `src/shared/api/backend.ts`. Las páginas de sesión usan el proxy same-origin
+> `/api/v1/[...path]` documentado en `frontend/README.md`.
+
+## Autenticación, clientes y direcciones (Fase 5)
+
+- `POST /auth/register`: crea solo `CUSTOMER`; respuesta genérica y sin tokens.
+- `POST /auth/login`: cookies `tl_access`, `tl_refresh` y `tl_csrf`; no devuelve tokens en el cuerpo.
+- `POST /auth/refresh`: rota el refresh token y revoca la familia si detecta reutilización.
+- `POST /auth/logout`: revoca el refresh actual y borra las cookies.
+- `POST /auth/forgot-password` y `POST /auth/reset-password`: token de un solo uso, hasheado y con
+  caducidad; el reset revoca todos los refresh tokens del usuario.
+- `POST /auth/change-password`: exige sesión y contraseña actual; revoca todas las sesiones.
+- `GET/PATCH /me`: perfil propio. `GET/POST /me/addresses` y `PATCH/DELETE /me/addresses/:id`:
+  direcciones propias; un recurso ajeno responde `404`.
+- Todos los endpoints exigen `x-app-token`. Las mutaciones con cookies de sesión exigen además
+  `X-CSRF-Token`; el cliente obtiene el valor de la cookie `tl_csrf`.
 
 ## Catálogo, imágenes e inventario (Fase 3)
 
@@ -163,4 +181,6 @@ El login/logout llega en la Fase 5.
 
 > **Estado de verificación:** el agente no ejecuta `npm install`, builds, migraciones, pruebas ni
 > servidores (regla 6 de AGENTS.md). Los comandos de esta sección los ejecuta el usuario; el
-> agente solo ejecuta `tsc --noEmit`. Anota aquí el resultado real cuando los corras.
+> agente solo ejecuta `tsc --noEmit`. Anota aquí el resultado real cuando los corras. El estado
+> detallado de la última fase está en
+> [`../plan/architecture/phase-5-report.md`](../plan/architecture/phase-5-report.md).

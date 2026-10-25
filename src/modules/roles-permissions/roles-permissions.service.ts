@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Op } from 'sequelize';
+import { Op, type Transaction } from 'sequelize';
 import { Permission } from './models/permission.model';
+import { Role } from './models/role.model';
 import { RolePermission } from './models/role-permission.model';
 import { UserRole } from './models/user-role.model';
 
@@ -24,6 +25,7 @@ export class RolesPermissionsService {
   private readonly cache = new Map<string, CachedPermissions>();
 
   constructor(
+    @InjectModel(Role) private readonly roleModel: typeof Role,
     @InjectModel(Permission)
     private readonly permissionModel: typeof Permission,
     @InjectModel(RolePermission)
@@ -69,6 +71,33 @@ export class RolesPermissionsService {
     });
 
     return permissions;
+  }
+
+  /**
+   * Asigna un rol existente a un usuario. No crea roles: el seeder es la única
+   * fuente de la matriz del MVP.
+   */
+  async assignRole(
+    userId: string,
+    roleCode: string,
+    transaction?: Transaction,
+  ): Promise<void> {
+    const role = await this.roleModel.findOne({
+      where: { code: roleCode },
+      transaction,
+    });
+    if (!role) {
+      throw new InternalServerErrorException(
+        `El rol ${roleCode} no existe; ejecuta el seeder`,
+      );
+    }
+
+    await this.userRoleModel.findOrCreate({
+      where: { userId, roleId: role.id },
+      defaults: { userId, roleId: role.id },
+      transaction,
+    });
+    this.invalidate(userId);
   }
 
   /** Invalida la caché de un usuario (asignar/quitar rol, desactivar cuenta). */

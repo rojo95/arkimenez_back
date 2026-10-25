@@ -11,7 +11,7 @@ import { secureEquals } from '../../../shared/utils/secure-compare';
 import { COOKIE_NAMES, CSRF_HEADER, SAFE_METHODS } from '../auth.constants';
 
 /**
- * Protección CSRF por doble envío: la cookie `csrf_token` (legible por el
+ * Protección CSRF por doble envío: la cookie `tl_csrf` (legible por el
  * frontend) debe coincidir con la cabecera `X-CSRF-Token`.
  *
  * Solo se exige en peticiones que modifican estado y cuando ya existe una

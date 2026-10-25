@@ -1,18 +1,21 @@
 import { RolesPermissionsService } from './roles-permissions.service';
 import { Permission } from './models/permission.model';
+import { Role } from './models/role.model';
 import { RolePermission } from './models/role-permission.model';
 import { UserRole } from './models/user-role.model';
 
 describe('RolesPermissionsService', () => {
-  const userRoleModel = { findAll: jest.fn() };
+  const userRoleModel = { findAll: jest.fn(), findOrCreate: jest.fn() };
   const rolePermissionModel = { findAll: jest.fn() };
   const permissionModel = { findAll: jest.fn() };
+  const roleModel = { findOne: jest.fn() };
 
   let service: RolesPermissionsService;
 
   beforeEach(() => {
     jest.clearAllMocks();
     service = new RolesPermissionsService(
+      roleModel as unknown as typeof Role,
       permissionModel as unknown as typeof Permission,
       rolePermissionModel as unknown as typeof RolePermission,
       userRoleModel as unknown as typeof UserRole,
@@ -52,6 +55,27 @@ describe('RolesPermissionsService', () => {
     await service.getPermissionsForUser('u1');
 
     expect(userRoleModel.findAll).toHaveBeenCalledTimes(1);
+  });
+
+  it('asigna un rol existente sin crear roles nuevos', async () => {
+    roleModel.findOne.mockResolvedValue({ id: 'role-customer' });
+    userRoleModel.findOrCreate.mockResolvedValue([{}, true]);
+
+    await service.assignRole('u1', 'CUSTOMER');
+
+    expect(userRoleModel.findOrCreate).toHaveBeenCalledWith({
+      where: { userId: 'u1', roleId: 'role-customer' },
+      defaults: { userId: 'u1', roleId: 'role-customer' },
+      transaction: undefined,
+    });
+  });
+
+  it('falla si el rol no existe (seeder no ejecutado)', async () => {
+    roleModel.findOne.mockResolvedValue(null);
+
+    await expect(service.assignRole('u1', 'CUSTOMER')).rejects.toThrow(
+      'ejecuta el seeder',
+    );
   });
 
   it('invalidate fuerza una nueva consulta', async () => {

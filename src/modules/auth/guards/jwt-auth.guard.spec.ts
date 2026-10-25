@@ -2,6 +2,7 @@ import { ExecutionContext, HttpStatus } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { AppException } from '../../../shared/errors/app-exception';
+import { UsersService } from '../../users/users.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 function buildContext(request: Record<string, unknown>): ExecutionContext {
@@ -15,14 +16,23 @@ function buildContext(request: Record<string, unknown>): ExecutionContext {
 describe('JwtAuthGuard', () => {
   let reflector: { getAllAndOverride: jest.Mock };
   let jwtService: { verifyAsync: jest.Mock };
+  let usersService: { findById: jest.Mock };
   let guard: JwtAuthGuard;
 
   beforeEach(() => {
     reflector = { getAllAndOverride: jest.fn().mockReturnValue(false) };
     jwtService = { verifyAsync: jest.fn() };
+    usersService = {
+      findById: jest.fn().mockResolvedValue({
+        id: 'u1',
+        email: 'a@b.com',
+        status: 'ACTIVE',
+      }),
+    };
     guard = new JwtAuthGuard(
       reflector as unknown as Reflector,
       jwtService as unknown as JwtService,
+      usersService as unknown as UsersService,
     );
   });
 
@@ -41,13 +51,14 @@ describe('JwtAuthGuard', () => {
     ).rejects.toMatchObject({ code: 'UNAUTHENTICATED' });
   });
 
-  it('acepta un token válido del encabezado Authorization', async () => {
-    jwtService.verifyAsync.mockResolvedValue({ sub: 'u1', email: 'a@b.com' });
+  it('acepta un token válido y carga el usuario de la base de datos', async () => {
+    jwtService.verifyAsync.mockResolvedValue({ sub: 'u1' });
     const request: Record<string, unknown> = {
       headers: { authorization: 'Bearer valido' },
     };
 
     await expect(guard.canActivate(buildContext(request))).resolves.toBe(true);
+    expect(usersService.findById).toHaveBeenCalledWith('u1');
     expect(request.user).toEqual({
       id: 'u1',
       email: 'a@b.com',
@@ -65,12 +76,27 @@ describe('JwtAuthGuard', () => {
     ).rejects.toBeInstanceOf(AppException);
   });
 
-  it('lee la cookie access_token', async () => {
-    jwtService.verifyAsync.mockResolvedValue({ sub: 'u1', email: 'a@b.com' });
+  it('rechaza con 403 una cuenta desactivada', async () => {
+    jwtService.verifyAsync.mockResolvedValue({ sub: 'u1' });
+    usersService.findById.mockResolvedValue({
+      id: 'u1',
+      email: 'a@b.com',
+      status: 'DISABLED',
+    });
 
     await expect(
       guard.canActivate(
-        buildContext({ headers: {}, cookies: { access_token: 'valido' } }),
+        buildContext({ headers: { authorization: 'Bearer valido' } }),
+      ),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_DISABLED' });
+  });
+
+  it('lee la cookie tl_access', async () => {
+    jwtService.verifyAsync.mockResolvedValue({ sub: 'u1' });
+
+    await expect(
+      guard.canActivate(
+        buildContext({ headers: {}, cookies: { tl_access: 'valido' } }),
       ),
     ).resolves.toBe(true);
   });

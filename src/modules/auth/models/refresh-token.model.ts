@@ -12,6 +12,7 @@ import {
 export interface RefreshTokenAttributes {
   id: string;
   userId: string;
+  familyId: string;
   tokenHash: string;
   expiresAt: Date;
   revokedAt: Date | null;
@@ -39,6 +40,9 @@ export class RefreshToken extends Model<
 
   @Column({ type: DataType.UUID, allowNull: false })
   declare userId: string;
+
+  @Column({ type: DataType.UUID, allowNull: false })
+  declare familyId: string;
 
   @Column({ type: DataType.STRING(64), allowNull: false, unique: true })
   declare tokenHash: string;

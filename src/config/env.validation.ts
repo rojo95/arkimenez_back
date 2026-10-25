@@ -34,8 +34,16 @@ export const envValidationSchema = Joi.object({
 
   // Sesiones (ADR-0002)
   JWT_ACCESS_SECRET: Joi.string().min(32).required(),
-  ACCESS_TOKEN_TTL: Joi.string().default('15m'),
+  ACCESS_TOKEN_TTL: Joi.string()
+    .pattern(/^\d+[smhd]$/)
+    .default('15m'),
   REFRESH_TOKEN_TTL_DAYS: Joi.number().integer().min(1).default(30),
+  PASSWORD_RESET_TTL_MINUTES: Joi.number()
+    .integer()
+    .min(5)
+    .max(1440)
+    .default(60),
+  FRONTEND_URL: Joi.string().uri().default('http://localhost:3000'),
   COOKIE_DOMAIN: Joi.string().allow('').optional(),
   COOKIE_SECURE: Joi.boolean()
     .truthy('true')
@@ -81,7 +89,19 @@ export const envValidationSchema = Joi.object({
     then: Joi.string().uri().required(),
   }),
 
+  // Correo (Mailpit local en desarrollo)
+  MAIL_HOST: Joi.string().default('localhost'),
+  MAIL_PORT: Joi.number().port().default(1025),
+  MAIL_USER: Joi.string().allow('').default(''),
+  MAIL_PASSWORD: Joi.string().allow('').default(''),
+  MAIL_FROM: Joi.string()
+    .email({ tlds: { allow: false } })
+    .default('no-reply@tiendalujosa.local'),
+
   // Primer OWNER (solo lo exige el seeder, no el arranque)
-  INITIAL_OWNER_EMAIL: Joi.string().email().allow('').optional(),
+  INITIAL_OWNER_EMAIL: Joi.string()
+    .email({ tlds: { allow: false } })
+    .allow('')
+    .optional(),
   INITIAL_OWNER_PASSWORD: Joi.string().min(10).max(128).allow('').optional(),
 });

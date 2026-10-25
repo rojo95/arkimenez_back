@@ -30,7 +30,7 @@ describe('CsrfGuard', () => {
         buildContext({
           method: 'POST',
           headers: { 'x-csrf-token': 'aaa' },
-          cookies: { refresh_token: 'r', csrf_token: 'bbb' },
+          cookies: { tl_refresh: 'r', tl_csrf: 'bbb' },
         }),
       ),
     ).toThrow();
@@ -42,7 +42,7 @@ describe('CsrfGuard', () => {
         buildContext({
           method: 'POST',
           headers: { 'x-csrf-token': 'igual' },
-          cookies: { refresh_token: 'r', csrf_token: 'igual' },
+          cookies: { tl_refresh: 'r', tl_csrf: 'igual' },
         }),
       ),
     ).toBe(true);

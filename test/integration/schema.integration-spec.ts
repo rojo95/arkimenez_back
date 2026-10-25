@@ -58,6 +58,8 @@ describe('Esquema en PostgreSQL (integración)', () => {
         'role_permissions',
         'user_roles',
         'refresh_tokens',
+        'password_reset_tokens',
+        'addresses',
         'store_settings',
         'audit_logs',
       ]),

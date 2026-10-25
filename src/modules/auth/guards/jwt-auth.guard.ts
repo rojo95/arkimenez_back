@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 import { AppException } from '../../../shared/errors/app-exception';
 import { ErrorCode } from '../../../shared/errors/error-codes';
+import { UsersService } from '../../users/users.service';
 import { COOKIE_NAMES } from '../auth.constants';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import type {
@@ -23,6 +24,7 @@ export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
+    private readonly usersService: UsersService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -44,13 +46,9 @@ export class JwtAuthGuard implements CanActivate {
       );
     }
 
+    let payload: JwtPayload;
     try {
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
-      request.user = {
-        id: payload.sub,
-        email: payload.email,
-        permissions: [],
-      };
+      payload = await this.jwtService.verifyAsync<JwtPayload>(token);
     } catch {
       throw new AppException(
         HttpStatus.UNAUTHORIZED,
@@ -58,6 +56,37 @@ export class JwtAuthGuard implements CanActivate {
         'La sesión no es válida o ha expirado',
       );
     }
+
+    if (!payload.sub) {
+      throw new AppException(
+        HttpStatus.UNAUTHORIZED,
+        ErrorCode.UNAUTHENTICATED,
+        'La sesión no es válida o ha expirado',
+      );
+    }
+
+    // La cuenta se relee en cada petición: una baja debe surtir efecto inmediato.
+    const user = await this.usersService.findById(payload.sub);
+    if (!user) {
+      throw new AppException(
+        HttpStatus.UNAUTHORIZED,
+        ErrorCode.UNAUTHENTICATED,
+        'La sesión no es válida o ha expirado',
+      );
+    }
+    if (user.status === 'DISABLED') {
+      throw new AppException(
+        HttpStatus.FORBIDDEN,
+        ErrorCode.ACCOUNT_DISABLED,
+        'La cuenta está desactivada',
+      );
+    }
+
+    request.user = {
+      id: user.id,
+      email: user.email,
+      permissions: [],
+    };
 
     return true;
   }

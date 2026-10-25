@@ -4,7 +4,9 @@ export interface AuthenticatedUser {
   permissions: string[];
 }
 
+/** El access token solo identifica al usuario; roles y permisos se leen de BD. */
 export interface JwtPayload {
   sub: string;
-  email: string;
+  iat?: number;
+  exp?: number;
 }

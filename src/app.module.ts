@@ -5,7 +5,8 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { envValidationSchema } from './config/env.validation';
 import { DatabaseModule } from './infrastructure/database/database.module';
 import { StorageModule } from './infrastructure/storage/storage.module';
@@ -18,6 +19,7 @@ import { RolesPermissionsModule } from './modules/roles-permissions/roles-permis
 import { StoreSettingsModule } from './modules/store-settings/store-settings.module';
 import { UsersModule } from './modules/users/users.module';
 import { AllExceptionsFilter } from './shared/errors/all-exceptions.filter';
+import { AppThrottlerGuard } from './shared/guards/app-throttler.guard';
 import { AppTokenMiddleware } from './shared/middleware/app-token/app-token.middleware';
 import { TraceIdMiddleware } from './shared/middleware/trace-id/trace-id.middleware';
 
@@ -28,6 +30,12 @@ import { TraceIdMiddleware } from './shared/middleware/trace-id/trace-id.middlew
       validationSchema: envValidationSchema,
       validationOptions: { abortEarly: false, allowUnknown: true },
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60_000,
+        limit: 120,
+      },
+    ]),
     DatabaseModule,
     StorageModule,
     UsersModule,
@@ -39,7 +47,10 @@ import { TraceIdMiddleware } from './shared/middleware/trace-id/trace-id.middlew
     CatalogModule,
     HealthModule,
   ],
-  providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],
+  providers: [
+    { provide: APP_GUARD, useClass: AppThrottlerGuard },
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
