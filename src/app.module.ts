@@ -14,8 +14,11 @@ import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { HealthModule } from './modules/health/health.module';
+import { CheckoutModule } from './modules/checkout/checkout.module';
+import { OrdersModule } from './modules/orders/orders.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { RolesPermissionsModule } from './modules/roles-permissions/roles-permissions.module';
+import { SeedModule } from './modules/seed/seed.module';
 import { StoreSettingsModule } from './modules/store-settings/store-settings.module';
 import { UsersModule } from './modules/users/users.module';
 import { AllExceptionsFilter } from './shared/errors/all-exceptions.filter';
@@ -40,12 +43,15 @@ import { TraceIdMiddleware } from './shared/middleware/trace-id/trace-id.middlew
     StorageModule,
     UsersModule,
     RolesPermissionsModule,
+    SeedModule,
     StoreSettingsModule,
     AuditModule,
     AuthModule,
     InventoryModule,
     CatalogModule,
     HealthModule,
+    CheckoutModule,
+    OrdersModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: AppThrottlerGuard },

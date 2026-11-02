@@ -25,7 +25,8 @@ describe('Auth y clientes (integración)', () => {
     const nestApp = await NestFactory.create<NestExpressApplication>(
       AppModule,
       {
-        logger: false,
+        logger: ['error', 'warn'],
+        abortOnError: false,
       },
     );
     nestApp.use(cookieParser());
@@ -35,6 +36,9 @@ describe('Auth y clientes (integración)', () => {
     server = nestApp.getHttpServer();
     appToken = process.env.APP_ACCESS_TOKEN ?? '';
 
+    // El seed se ejecuta sobre la MISMA instancia de Sequelize que usa la app:
+    // abrir un segundo ApplicationContext con SeedModule crea otra conexión
+    // para las mismas clases de modelo y su close() deja sin conexión a la app.
     await app.get(SeedService).run();
   });
 

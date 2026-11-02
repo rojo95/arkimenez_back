@@ -21,3 +21,4 @@ process.env.INITIAL_OWNER_PASSWORD =
 process.env.STORAGE_DRIVER = 'local';
 process.env.STORAGE_LOCAL_DIR = './.uploads/integration';
 process.env.MAX_IMAGE_SIZE_MB = '5';
+

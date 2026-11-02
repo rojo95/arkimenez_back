@@ -31,6 +31,10 @@ describe('Seeder contra PostgreSQL (integración)', () => {
     seedService = app.get(SeedService);
 
     const queryInterface = sequelize.getQueryInterface();
+    // `orders.user_id` es ON DELETE RESTRICT: sin vaciar los pedidos, borrar
+    // usuarios falla con violación de FK cuando otros specs ya crearon pedidos.
+    // `order_items` y `order_status_history` caen por CASCADE desde `orders`.
+    await queryInterface.bulkDelete('orders', {});
     await queryInterface.bulkDelete('role_permissions', {});
     await queryInterface.bulkDelete('user_roles', {});
     await queryInterface.bulkDelete('users', {});

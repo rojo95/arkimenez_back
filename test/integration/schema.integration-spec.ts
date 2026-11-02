@@ -62,6 +62,9 @@ describe('Esquema en PostgreSQL (integración)', () => {
         'addresses',
         'store_settings',
         'audit_logs',
+        'orders',
+        'order_items',
+        'order_status_history',
       ]),
     );
   });
